@@ -7,6 +7,4 @@ function usePermission(pageName: string, handleName: string) {
   return !!permissions.find((item) => item.includes(queryPermission))
 }
 
-
-
 export default usePermission
