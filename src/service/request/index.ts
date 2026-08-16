@@ -24,7 +24,7 @@ class HYRequest {
         return config
       },
       (err) => {
-        return err
+        return Promise.reject(err)
       }
     )
 
@@ -33,7 +33,7 @@ class HYRequest {
         return res.data
       },
       (err) => {
-        return err
+        return Promise.reject(err)
       }
     )
 
