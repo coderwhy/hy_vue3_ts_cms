@@ -1,4 +1,5 @@
 import { localCache } from '@/utils/cache'
+import type { IMenu } from '@/service/login/types'
 import { firstRoute, mapMenuToRoutes } from '@/utils/map-menu'
 import { createRouter, createWebHashHistory } from 'vue-router'
 
@@ -26,7 +27,7 @@ const router = createRouter({
   ]
 })
 
-export function addRoutesWithMenu(menus: any) {
+export function addRoutesWithMenu(menus: IMenu[]) {
   // 1.获取匹配到的所有的路由
   const routes = mapMenuToRoutes(menus)
 
@@ -37,7 +38,7 @@ export function addRoutesWithMenu(menus: any) {
 }
 
 router.beforeEach((to) => {
-  const token = localCache.getCache('token')
+  const token = localCache.getCache<string>('token')
   if (to.path.startsWith('/main') && !token) {
     return '/login'
   }

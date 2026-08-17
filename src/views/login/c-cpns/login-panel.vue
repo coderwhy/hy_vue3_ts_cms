@@ -22,8 +22,8 @@
       </el-tab-pane>
     </el-tabs>
     <div class="control-account">
-      <el-checkbox v-model="isKeep" label="记住密码" />
-      <el-link type="primary">记住密码</el-link>
+      <el-checkbox v-model="isKeep" label="记住账号" />
+      <el-link type="primary">记住账号</el-link>
     </div>
     <el-button type="primary" class="login-btn" @click="loginAciton">立即登录</el-button>
   </div>
@@ -36,15 +36,19 @@ import PanelAccount from './panel-account.vue'
 import { localCache } from '@/utils/cache'
 
 const currentTab = ref('account')
-const isKeep = ref<boolean>(localCache.getCache('rem_pwd'))
+const isKeep = ref<boolean>(
+  localCache.getCache<boolean>('remember_account') ??
+    localCache.getCache<boolean>('rem_pwd') ??
+    false
+)
 watch(isKeep, (newValue) => {
-  localCache.setCache('rem_pwd', newValue)
+  localCache.setCache('remember_account', newValue)
+  localCache.deleteCache('rem_pwd')
 })
 
 const accountRef = ref<InstanceType<typeof PanelAccount>>()
 
 function loginAciton() {
-  console.log('立即登录')
   accountRef.value?.loginAction(isKeep.value)
 }
 </script>

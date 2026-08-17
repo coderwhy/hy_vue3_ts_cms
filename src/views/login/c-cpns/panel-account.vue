@@ -21,9 +21,13 @@ import { localCache } from '@/utils/cache'
 
 // 定义内部的数据
 const account = reactive({
-  name: localCache.getCache('name') ?? '',
-  password: localCache.getCache('password') ?? ''
+  name:
+    localCache.getCache<string>('rememberedAccount') ?? localCache.getCache<string>('name') ?? '',
+  password: ''
 })
+
+// Older versions stored the password in localStorage. Remove it when the login form loads.
+localCache.deleteCache('password')
 
 // 定义form的验证规则
 const accountRules: FormRules = {
@@ -42,20 +46,24 @@ const formRef = ref<FormInstance>()
 const loginStore = useLoginStore()
 function loginAction(isKeep: boolean) {
   // 是否通过了验证
-  formRef.value?.validate((isValid) => {
+  formRef.value?.validate(async (isValid) => {
     if (isValid) {
       const name = account.name
       const password = account.password
-      // 1.登录操作
-      loginStore.accountLoginAction({ name, password })
 
-      // 2.记住密码
+      // Remember the account name only. Passwords must not be persisted in localStorage.
       if (isKeep) {
-        localCache.setCache('name', name)
-        localCache.setCache('password', password)
-      } else {
+        localCache.setCache('rememberedAccount', name)
         localCache.deleteCache('name')
-        localCache.deleteCache('password')
+      } else {
+        localCache.deleteCache('rememberedAccount')
+        localCache.deleteCache('name')
+      }
+
+      try {
+        await loginStore.accountLoginAction({ name, password })
+      } catch {
+        ElMessage.error('登录失败，请检查账号或密码')
       }
     } else {
       ElMessage.warning({ message: '账号或者密码输入的规则错误~' })
