@@ -1,7 +1,6 @@
-export interface IApiResponse<T> {
-  code: number
-  data: T
-}
+import type { IDepartment, IRole } from '../main/types'
+
+export type { IDepartment, IMenu, IRole } from '../main/types'
 
 export interface IAccountLoginParams {
   name: string
@@ -14,23 +13,6 @@ export interface ILoginData {
   token: string
 }
 
-export interface IRole {
-  id: number
-  name: string
-  intro: string
-  createAt: string
-  updateAt: string
-}
-
-export interface IDepartment {
-  id: number
-  name: string
-  parentId: number | null
-  createAt: string
-  updateAt: string
-  leader: string
-}
-
 export interface IUserInfo {
   id: number
   name: string
@@ -41,15 +23,4 @@ export interface IUserInfo {
   updateAt: string
   role: IRole
   department: IDepartment | null
-}
-
-export interface IMenu {
-  id: number
-  name: string
-  type: number
-  url: string
-  icon: string
-  sort: number
-  permission?: string
-  children?: IMenu[]
 }
