@@ -1,5 +1,7 @@
 import router, { addRoutesWithMenu } from '@/router'
 import { accountLogin, getRoleMenus, getUserById } from '@/service/login/login'
+import type { IAccountLoginParams, IMenu, IUserInfo } from '@/service/login/types'
+import { clearAuthCache } from '@/utils/auth'
 import { localCache } from '@/utils/cache'
 import { mapMenuToPersssions } from '@/utils/map-menu'
 import { defineStore } from 'pinia'
@@ -7,20 +9,20 @@ import useMainStore from '../main/main'
 
 interface ILoginState {
   token: string
-  userInfo: any
-  userMenus: any[]
+  userInfo: IUserInfo | null
+  userMenus: IMenu[]
   permissions: string[]
 }
 
 const useLoginStore = defineStore('login', {
   state: (): ILoginState => ({
     token: '',
-    userInfo: {},
+    userInfo: null,
     userMenus: [],
     permissions: []
   }),
   actions: {
-    async accountLoginAction(account: any) {
+    async accountLoginAction(account: IAccountLoginParams) {
       // 1.获取登录信息
       const loginRes = await accountLogin(account)
       const { id, token } = loginRes.data
@@ -32,7 +34,7 @@ const useLoginStore = defineStore('login', {
       // 3.获取用户信息
       const userRes = await getUserById(id)
       this.userInfo = userRes.data
-      localCache.setCache('useInfo', this.userInfo)
+      localCache.setCache('userInfo', this.userInfo)
 
       // 4.根据role的id获取菜单
       const roleId = this.userInfo.role.id
@@ -57,16 +59,23 @@ const useLoginStore = defineStore('login', {
     },
 
     loadLocalDataAction() {
-      this.token = localCache.getCache('token')
-      this.userInfo = localCache.getCache('userInfo')
-      this.userMenus = localCache.getCache('userMenus')
-      this.permissions = localCache.getCache('permissions')
+      this.token = localCache.getCache<string>('token') ?? ''
+      this.userInfo = localCache.getCache<IUserInfo>('userInfo') ?? null
+      this.userMenus = localCache.getCache<IMenu[]>('userMenus') ?? []
+      this.permissions = localCache.getCache<string[]>('permissions') ?? []
 
-      if (this.token && this.userMenus) {
+      if (this.token && this.userMenus.length) {
         addRoutesWithMenu(this.userMenus) // 获取所有的数据
         const mainStore = useMainStore()
         mainStore.fetchEntireDataAction()
       }
+    },
+
+    logoutAction() {
+      this.$reset()
+      useMainStore().$reset()
+      clearAuthCache()
+      router.push('/login')
     }
   }
 })
