@@ -1,29 +1,30 @@
 <template>
   <div class="user">
     <!-- 1.搜索区域 -->
-    <page-search @query-click="handleQueryClick" @reset-click="handleResetClick" />
+    <UserPageSearch @query-click="handleQueryClick" @reset-click="handleResetClick" />
 
     <!-- 2.展示区域 -->
-    <page-content
+    <UserPageContent
       ref="contentRef"
       @new-data-click="handleNewDataClick"
       @edit-data-click="handleEditDataClick"
     />
 
     <!-- 3.新建和编辑 -->
-    <page-modal ref="modalRef" />
+    <UserPageModal ref="modalRef" />
   </div>
 </template>
 
 <script setup lang="ts" name="user">
-import PageSearch from './c-cpns/page-search.vue'
-import PageContent from './c-cpns/page-content.vue'
-import PageModal from './c-cpns/page-modal.vue'
+import UserPageSearch from './c-cpns/page-search.vue'
+import UserPageContent from './c-cpns/page-content.vue'
+import UserPageModal from './c-cpns/page-modal.vue'
 import { ref } from 'vue'
+import type { PageFormData, PageRecord } from '@/types/page'
 
 // 1.重置功能
-const contentRef = ref<InstanceType<typeof PageContent>>()
-function handleQueryClick(searchInfo: any) {
+const contentRef = ref<InstanceType<typeof UserPageContent>>()
+function handleQueryClick(searchInfo: PageFormData) {
   contentRef.value?.fetchUserListData(searchInfo)
 }
 function handleResetClick() {
@@ -31,11 +32,11 @@ function handleResetClick() {
 }
 
 // 2.新建和编辑数据
-const modalRef = ref<InstanceType<typeof PageModal>>()
+const modalRef = ref<InstanceType<typeof UserPageModal>>()
 function handleNewDataClick() {
   modalRef.value?.setDialogVisible()
 }
-function handleEditDataClick(data: any) {
+function handleEditDataClick(data: PageRecord) {
   modalRef.value?.setDialogVisible(false, data)
 }
 </script>

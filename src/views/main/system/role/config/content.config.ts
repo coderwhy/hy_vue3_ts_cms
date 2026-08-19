@@ -1,4 +1,6 @@
-const contentConfig = {
+import type { IPageContentConfig } from '@/types/page'
+
+const contentConfig: IPageContentConfig = {
   pageName: 'role',
   header: {
     title: '角色列表',

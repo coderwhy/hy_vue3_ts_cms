@@ -1,4 +1,6 @@
-const modalConfig = {
+import type { IPageModalConfig } from '@/types/page'
+
+const modalConfig: IPageModalConfig = {
   pageName: 'role',
   title: '新建角色',
   formItems: [
@@ -16,6 +18,8 @@ const modalConfig = {
     },
     {
       type: 'custom',
+      label: '菜单权限',
+      prop: 'menuList',
       slotName: 'menulist'
     }
   ]

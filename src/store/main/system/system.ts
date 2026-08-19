@@ -8,8 +8,9 @@ import {
   newPageData,
   newUserData
 } from '@/service/main/system'
-import type { IPageQuery, IUser } from '@/service/main/types'
+import type { IPageQuery, IPageQueryParams, IUserPayload } from '@/service/main/types'
 import { defineStore } from 'pinia'
+import type { PageRecord } from '@/types/page'
 import type { ISystemState } from './type'
 
 const useSystemStore = defineStore('system', {
@@ -27,27 +28,24 @@ const useSystemStore = defineStore('system', {
       this.usersList = list
       this.usersTotalCount = totalCount
     },
-    async newUserDataAction(userInfo: Partial<IUser>) {
+    async newUserDataAction(userInfo: IUserPayload) {
       // 1.创建用户数据
-      const res = await newUserData(userInfo)
-      console.log(res)
+      await newUserData(userInfo)
 
       // 2.请求新的数据
-      this.getUserListDataAction({ offset: 0, size: 10 })
+      await this.getUserListDataAction({ offset: 0, size: 10 })
     },
     async deleteUserDataAction(id: number) {
-      const res = await deleteUserData(id)
-      console.log(res)
-      this.getUserListDataAction({ offset: 0, size: 10 })
+      await deleteUserData(id)
+      await this.getUserListDataAction({ offset: 0, size: 10 })
     },
-    async editUserDataAction(id: number, userInfo: Partial<IUser>) {
-      const res = await editUserData(id, userInfo)
-      console.log(res)
-      this.getUserListDataAction({ offset: 0, size: 10 })
+    async editUserDataAction(id: number, userInfo: IUserPayload) {
+      await editUserData(id, userInfo)
+      await this.getUserListDataAction({ offset: 0, size: 10 })
     },
 
     // 页面的网络请求
-    async getPageListDataAction(pageName: string, queryInfo: IPageQuery) {
+    async getPageListDataAction(pageName: string, queryInfo: IPageQueryParams) {
       // 1.请求用户列表数据
       const pageListResult = await getPageListData(pageName, queryInfo)
       const { list, totalCount } = pageListResult.data
@@ -55,20 +53,16 @@ const useSystemStore = defineStore('system', {
       this.pageTotalCount = totalCount
     },
     async deletePageDataAction(pageName: string, id: number) {
-      const res = await deletePageData(pageName, id)
-      console.log(res)
-      this.getPageListDataAction(pageName, { offset: 0, size: 10 })
+      await deletePageData(pageName, id)
+      await this.getPageListDataAction(pageName, { offset: 0, size: 10 })
     },
-    async newPageDataAction(pageName: string, pageData: Record<string, unknown>) {
-      const res = await newPageData(pageName, pageData)
-      console.log(pageData)
-      console.log(res)
-      this.getPageListDataAction(pageName, { offset: 0, size: 10 })
+    async newPageDataAction(pageName: string, pageData: PageRecord) {
+      await newPageData(pageName, pageData)
+      await this.getPageListDataAction(pageName, { offset: 0, size: 10 })
     },
-    async editPageDataAction(pageName: string, id: number, pageData: Record<string, unknown>) {
-      const res = await editPageData(pageName, id, pageData)
-      console.log(res)
-      this.getPageListDataAction(pageName, { offset: 0, size: 10 })
+    async editPageDataAction(pageName: string, id: number, pageData: PageRecord) {
+      await editPageData(pageName, id, pageData)
+      await this.getPageListDataAction(pageName, { offset: 0, size: 10 })
     }
   }
 })

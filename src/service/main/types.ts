@@ -3,6 +3,8 @@ export interface IPageQuery {
   size: number
 }
 
+export type IPageQueryParams = IPageQuery & Record<string, unknown>
+
 export interface IUser {
   id: number
   name: string
@@ -13,6 +15,10 @@ export interface IUser {
   roleId: number
   createAt: string
   updateAt: string
+}
+
+export interface IUserPayload extends Partial<IUser> {
+  password?: string
 }
 
 export interface IDepartment {

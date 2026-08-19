@@ -33,17 +33,24 @@ import useMainStore from '@/store/main/main'
 import useSystemStore from '@/store/main/system/system'
 import { storeToRefs } from 'pinia'
 import { reactive, ref } from 'vue'
+import type { PageRecord } from '@/types/page'
+
+interface IDepartmentFormData {
+  name: string
+  leader: string
+  parentId: number | string
+}
 
 const dialogVisible = ref(false)
 const isEdit = ref(false)
-const editData = ref()
+const editData = ref<PageRecord | null>(null)
 
 // 部门和角色的数据
 const mainStore = useMainStore()
 const { entireDepartments } = storeToRefs(mainStore)
 
 // 定义数据绑定
-const formData = reactive<any>({
+const formData = reactive<IDepartmentFormData>({
   name: '',
   leader: '',
   parentId: ''
@@ -53,25 +60,36 @@ const formData = reactive<any>({
 const systemStore = useSystemStore()
 function handleConfirmClick() {
   dialogVisible.value = false
+  const departmentData: PageRecord = {
+    name: formData.name,
+    leader: formData.leader,
+    parentId: formData.parentId === '' ? null : Number(formData.parentId)
+  }
   if (!isEdit.value) {
-    systemStore.newPageDataAction('department', formData)
-  } else {
-    systemStore.editPageDataAction('department', editData.value.id, formData)
+    systemStore.newPageDataAction('department', departmentData)
+  } else if (editData.value && typeof editData.value.id === 'number') {
+    systemStore.editPageDataAction('department', editData.value.id, departmentData)
   }
 }
 
 // 新建或者编辑
-function setDialogVisible(isNew: boolean = true, data: any = {}) {
+function setDialogVisible(isNew = true, data: PageRecord = {}) {
   dialogVisible.value = true
   isEdit.value = !isNew
   editData.value = data
-  for (const key in formData) {
-    if (isNew) {
-      formData[key] = ''
-    } else {
-      formData[key] = data[key]
-    }
-  }
+  Object.assign(formData, {
+    name: isNew ? '' : toStringValue(data.name),
+    leader: isNew ? '' : toStringValue(data.leader),
+    parentId: isNew ? '' : toNumberValue(data.parentId)
+  })
+}
+
+function toStringValue(value: unknown) {
+  return typeof value === 'string' || typeof value === 'number' ? String(value) : ''
+}
+
+function toNumberValue(value: unknown) {
+  return typeof value === 'number' || typeof value === 'string' ? value : ''
 }
 
 defineExpose({

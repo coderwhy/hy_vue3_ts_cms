@@ -1,6 +1,14 @@
 import hyRequest from '..'
 import type { IApiResponse, IPaginatedData } from '../types'
-import type { IDepartment, IMenu, IPageQuery, IRole, IUser } from './types'
+import type {
+  IDepartment,
+  IMenu,
+  IPageQuery,
+  IPageQueryParams,
+  IRole,
+  IUser,
+  IUserPayload
+} from './types'
 
 /** 用户的网络请求 */
 export function getUserListData(queryInfo: IPageQuery) {
@@ -10,8 +18,8 @@ export function getUserListData(queryInfo: IPageQuery) {
   })
 }
 
-export function newUserData(userInfo: Partial<IUser>) {
-  return hyRequest.post<IApiResponse<IUser>, Partial<IUser>>({
+export function newUserData(userInfo: IUserPayload) {
+  return hyRequest.post<IApiResponse<IUser>, IUserPayload>({
     url: '/users',
     data: userInfo
   })
@@ -23,16 +31,16 @@ export function deleteUserData(id: number) {
   })
 }
 
-export function editUserData(id: number, userInfo: Partial<IUser>) {
-  return hyRequest.patch<IApiResponse<IUser>, Partial<IUser>>({
+export function editUserData(id: number, userInfo: IUserPayload) {
+  return hyRequest.patch<IApiResponse<IUser>, IUserPayload>({
     url: '/users/' + id,
     data: userInfo
   })
 }
 
 /** 获取页面的数据 */
-export function getPageListData(pageName: string, queryInfo: IPageQuery) {
-  return hyRequest.post<IApiResponse<IPaginatedData<Record<string, unknown>>>, IPageQuery>({
+export function getPageListData(pageName: string, queryInfo: IPageQueryParams) {
+  return hyRequest.post<IApiResponse<IPaginatedData<Record<string, unknown>>>, IPageQueryParams>({
     url: `/${pageName}/list`,
     data: queryInfo
   })

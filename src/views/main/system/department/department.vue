@@ -33,7 +33,7 @@ const mainStore = useMainStore()
 const modalConfigRef = computed(() => {
   modalConfig.formItems.forEach((item) => {
     if (item.prop === 'parentId') {
-      item.options = mainStore.entireDepartments as any
+      item.options = mainStore.entireDepartments
     }
   })
   return modalConfig

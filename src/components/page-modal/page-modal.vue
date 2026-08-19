@@ -21,7 +21,7 @@
                   :placeholder="item.placeholder"
                   style="width: 100%"
                 >
-                  <template v-for="value in item.options" :key="value.id">
+                  <template v-for="value in item.options ?? []" :key="value.id">
                     <el-option :value="value.id" :label="value.name" />
                   </template>
                 </el-select>
@@ -55,51 +55,48 @@
 <script setup lang="ts" name="modal">
 import useSystemStore from '@/store/main/system/system'
 import { reactive, ref } from 'vue'
+import type { IPageModalConfig, PageFormData, PageFormValue, PageRecord } from '@/types/page'
 
 // 定义props
 interface IProps {
-  modalConfig: {
-    pageName: string
-    title: string
-    formItems: any[]
-  }
-  otherInfo?: any
+  modalConfig: IPageModalConfig
+  otherInfo?: PageRecord
 }
 
 const props = defineProps<IProps>()
 
 const dialogVisible = ref(false)
 const isEdit = ref(false)
-const editData = ref()
+const editData = ref<PageRecord | null>(null)
 
 // 部门和角色的数据
 // const mainStore = useMainStore()
 // const { entireDepartments } = storeToRefs(mainStore)
 
 // 定义数据绑定
-const initialForm: any = {}
+const initialForm: PageFormData = {}
 for (const item of props.modalConfig.formItems) {
   initialForm[item.prop] = item.initialValue ?? ''
 }
-const formData = reactive(initialForm)
+const formData = reactive<PageFormData>(initialForm)
 
 // 点击确定
 const systemStore = useSystemStore()
 function handleConfirmClick() {
   dialogVisible.value = false
-  let data = { ...formData }
+  const data: PageRecord = { ...formData }
   if (props.otherInfo) {
-    data = { ...data, ...props.otherInfo }
+    Object.assign(data, props.otherInfo)
   }
   if (!isEdit.value) {
     systemStore.newPageDataAction(props.modalConfig.pageName, data)
-  } else {
+  } else if (editData.value && typeof editData.value.id === 'number') {
     systemStore.editPageDataAction(props.modalConfig.pageName, editData.value.id, data)
   }
 }
 
 // 新建或者编辑
-function setDialogVisible(isNew: boolean = true, data: any = {}) {
+function setDialogVisible(isNew = true, data: PageRecord = {}) {
   dialogVisible.value = true
   isEdit.value = !isNew
   editData.value = data
@@ -107,9 +104,22 @@ function setDialogVisible(isNew: boolean = true, data: any = {}) {
     if (isNew) {
       formData[key] = ''
     } else {
-      formData[key] = data[key]
+      formData[key] = toFormValue(data[key])
     }
   }
+}
+
+function toFormValue(value: unknown): PageFormValue {
+  if (
+    typeof value === 'string' ||
+    typeof value === 'number' ||
+    typeof value === 'boolean' ||
+    Array.isArray(value) ||
+    value === null
+  ) {
+    return value
+  }
+  return ''
 }
 
 defineExpose({

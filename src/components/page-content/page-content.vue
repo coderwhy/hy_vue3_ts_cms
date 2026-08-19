@@ -17,7 +17,7 @@
           <template v-if="item.type === 'time'">
             <el-table-column align="center" :prop="item.prop" :label="item.label">
               <template #default="scope">
-                {{ utcFormat(scope.row[item.prop]) }}
+                {{ item.prop ? formatTime(scope.row[item.prop]) : '' }}
               </template>
             </el-table-column>
           </template>
@@ -72,20 +72,16 @@ import useSystemStore from '@/store/main/system/system'
 import { utcFormat } from '@/utils/format'
 import { ref } from 'vue'
 import usePermission from '@/hooks/usePermission'
+import type { IPageContentConfig, PageFormData, PageRecord } from '@/types/page'
 
 interface IProps {
-  contentConfig: {
-    pageName: string
-    header?: {
-      title: string
-      btnTitle: string
-    }
-    propsList: any[]
-    childrenProps?: any
-  }
+  contentConfig: IPageContentConfig
 }
 const props = defineProps<IProps>()
-const emit = defineEmits(['newDataClick', 'editDataClick'])
+const emit = defineEmits<{
+  (event: 'newDataClick'): void
+  (event: 'editDataClick', data: PageRecord): void
+}>()
 
 // 0.判断是否有增删改查的权限
 const isCreate = usePermission(props.contentConfig.pageName, 'create')
@@ -97,7 +93,7 @@ const isQuery = usePermission(props.contentConfig.pageName, 'query')
 const systemStore = useSystemStore()
 const currentPage = ref(1)
 const pageSize = ref(10)
-function fetchPageListData(queryInfo: any = {}) {
+function fetchPageListData(queryInfo: PageFormData = {}) {
   if (!isQuery) return
   // 1.获取offset和size
   const size = pageSize.value
@@ -127,12 +123,17 @@ function handleNewData() {
 }
 
 // 5.删除和编辑操作
-function handleDeleteClick(id: number) {
+function handleDeleteClick(id: unknown) {
+  if (typeof id !== 'number') return
   systemStore.deletePageDataAction(props.contentConfig.pageName, id)
 }
 
-function handleEditClick(data: any) {
+function handleEditClick(data: PageRecord) {
   emit('editDataClick', data)
+}
+
+function formatTime(value: unknown) {
+  return typeof value === 'string' ? utcFormat(value) : ''
 }
 
 // 暴露函数

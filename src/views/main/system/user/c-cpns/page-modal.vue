@@ -46,17 +46,28 @@ import useMainStore from '@/store/main/main'
 import useSystemStore from '@/store/main/system/system'
 import { storeToRefs } from 'pinia'
 import { reactive, ref } from 'vue'
+import type { IUserPayload } from '@/service/main/types'
+import type { PageRecord } from '@/types/page'
+
+interface IUserFormData {
+  name: string
+  realname: string
+  password: string
+  cellphone: string
+  roleId: number | string
+  departmentId: number | string
+}
 
 const dialogVisible = ref(false)
 const isEdit = ref(false)
-const editData = ref()
+const editData = ref<PageRecord | null>(null)
 
 // 部门和角色的数据
 const mainStore = useMainStore()
 const { entireDepartments, entireRoles } = storeToRefs(mainStore)
 
 // 定义数据绑定
-const formData = reactive<any>({
+const formData = reactive<IUserFormData>({
   name: '',
   realname: '',
   password: '',
@@ -69,25 +80,47 @@ const formData = reactive<any>({
 const systemStore = useSystemStore()
 function handleConfirmClick() {
   dialogVisible.value = false
+  const userData = toUserPayload()
   if (!isEdit.value) {
-    systemStore.newUserDataAction(formData)
-  } else {
-    systemStore.editUserDataAction(editData.value.id, formData)
+    systemStore.newUserDataAction(userData)
+  } else if (editData.value && typeof editData.value.id === 'number') {
+    systemStore.editUserDataAction(editData.value.id, userData)
   }
 }
 
 // 新建或者编辑
-function setDialogVisible(isNew: boolean = true, data: any = {}) {
+function setDialogVisible(isNew = true, data: PageRecord = {}) {
   dialogVisible.value = true
   isEdit.value = !isNew
   editData.value = data
-  for (const key in formData) {
-    if (isNew) {
-      formData[key] = ''
-    } else {
-      formData[key] = data[key]
-    }
+  Object.assign(formData, {
+    name: isNew ? '' : toStringValue(data.name),
+    realname: isNew ? '' : toStringValue(data.realname),
+    password: '',
+    cellphone: isNew ? '' : toStringValue(data.cellphone),
+    roleId: isNew ? '' : toNumberValue(data.roleId),
+    departmentId: isNew ? '' : toNumberValue(data.departmentId)
+  })
+}
+
+function toUserPayload(): IUserPayload {
+  const userData: IUserPayload = {
+    name: formData.name,
+    realname: formData.realname,
+    cellphone: Number(formData.cellphone),
+    roleId: Number(formData.roleId),
+    departmentId: Number(formData.departmentId)
   }
+  if (formData.password) userData.password = formData.password
+  return userData
+}
+
+function toStringValue(value: unknown) {
+  return typeof value === 'string' || typeof value === 'number' ? String(value) : ''
+}
+
+function toNumberValue(value: unknown) {
+  return typeof value === 'number' || typeof value === 'string' ? value : ''
 }
 
 defineExpose({
