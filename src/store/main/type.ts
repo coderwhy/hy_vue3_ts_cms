@@ -1,8 +1,1 @@
-export interface IDepartment {
-  id: number
-  name: string
-  parentId: any
-  createAt: string
-  updateAt: string
-  leader: string
-}
+export type { IDepartment, IMenu, IRole } from '@/service/main/types'

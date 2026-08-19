@@ -1,19 +1,11 @@
-export interface IUser {
-  id: number
-  name: string
-  realname: string
-  cellphone: number
-  enable: number
-  departmentId: number
-  roleId: number
-  createAt: string
-  updateAt: string
-}
+import type { IUser } from '@/service/main/types'
+
+export type { IUser }
 
 export interface ISystemState {
   usersTotalCount: number
   usersList: IUser[]
 
-  pageList: any[]
+  pageList: unknown[]
   pageTotalCount: number
 }

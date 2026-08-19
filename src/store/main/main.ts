@@ -1,10 +1,11 @@
 import { getDepartmentData, getMenuData, getRoleData } from '@/service/main/system'
+import type { IDepartment, IMenu, IRole } from '@/service/main/types'
 import { defineStore } from 'pinia'
 
 interface IMainState {
-  entireDepartments: any[]
-  entireRoles: any[]
-  entireMenus: any[]
+  entireDepartments: IDepartment[]
+  entireRoles: IRole[]
+  entireMenus: IMenu[]
 }
 
 const useMainStore = defineStore('main', {

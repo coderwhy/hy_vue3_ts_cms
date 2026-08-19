@@ -1,15 +1,15 @@
 import axios from 'axios'
 import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
 
-interface HYInstanceInterceptors<T = AxiosResponse> {
-  requestInterceptor?: (config: AxiosRequestConfig) => AxiosRequestConfig
-  requestInterceptorCatch?: (err: any) => any
+interface HYInstanceInterceptors<T = AxiosResponse, D = unknown> {
+  requestInterceptor?: (config: AxiosRequestConfig<D>) => AxiosRequestConfig<D>
+  requestInterceptorCatch?: (err: unknown) => unknown
   responseInterceptor?: (res: T) => T
-  responseInterceptorCatch?: (err: any) => any
+  responseInterceptorCatch?: (err: unknown) => unknown
 }
 
-interface HYRequestConfig<T = AxiosResponse> extends AxiosRequestConfig {
-  interceptors?: HYInstanceInterceptors<T>
+interface HYRequestConfig<T = AxiosResponse, D = unknown> extends AxiosRequestConfig<D> {
+  interceptors?: HYInstanceInterceptors<T, D>
 }
 
 class HYRequest {
@@ -48,43 +48,41 @@ class HYRequest {
     )
   }
 
-  request<T = any>(config: HYRequestConfig<T>) {
-    if (config.interceptors?.requestInterceptor) {
-      config = config.interceptors.requestInterceptor(config)
+  async request<T = unknown, D = unknown>(config: HYRequestConfig<T, D>): Promise<T> {
+    let requestConfig = config
+
+    if (requestConfig.interceptors?.requestInterceptor) {
+      requestConfig = requestConfig.interceptors.requestInterceptor(requestConfig)
     }
 
-    return new Promise<T>((resolve, reject) => {
-      this.instance
-        .request<any, T>(config)
-        .then((res) => {
-          if (config.interceptors?.responseInterceptor) {
-            res = config.interceptors.responseInterceptor(res)
-          }
-          resolve(res)
-        })
-        .catch((err: any) => {
-          if (config.interceptors?.responseInterceptorCatch) {
-            err = config.interceptors.responseInterceptorCatch(err)
-          }
-          reject(err)
-        })
-    })
+    try {
+      let response = (await this.instance.request<unknown, T, D>(requestConfig)) as T
+      if (requestConfig.interceptors?.responseInterceptor) {
+        response = requestConfig.interceptors.responseInterceptor(response)
+      }
+      return response
+    } catch (error: unknown) {
+      if (requestConfig.interceptors?.responseInterceptorCatch) {
+        throw await requestConfig.interceptors.responseInterceptorCatch(error)
+      }
+      throw error
+    }
   }
 
-  get<T = any>(config: HYRequestConfig<T>) {
-    return this.request<T>({ ...config, method: 'GET' })
+  get<T = unknown, D = unknown>(config: HYRequestConfig<T, D>) {
+    return this.request<T, D>({ ...config, method: 'GET' })
   }
 
-  post<T = any>(config: HYRequestConfig<T>) {
-    return this.request<T>({ ...config, method: 'POST' })
+  post<T = unknown, D = unknown>(config: HYRequestConfig<T, D>) {
+    return this.request<T, D>({ ...config, method: 'POST' })
   }
 
-  delete<T = any>(config: HYRequestConfig<T>) {
-    return this.request<T>({ ...config, method: 'DELETE' })
+  delete<T = unknown, D = unknown>(config: HYRequestConfig<T, D>) {
+    return this.request<T, D>({ ...config, method: 'DELETE' })
   }
 
-  patch<T = any>(config: HYRequestConfig<T>) {
-    return this.request<T>({ ...config, method: 'PATCH' })
+  patch<T = unknown, D = unknown>(config: HYRequestConfig<T, D>) {
+    return this.request<T, D>({ ...config, method: 'PATCH' })
   }
 }
 

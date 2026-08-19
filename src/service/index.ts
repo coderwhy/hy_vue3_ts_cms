@@ -1,3 +1,4 @@
+import axios from 'axios'
 import HYRequest from './request'
 import { BASE_URL1, TIME_OUT1 } from './config'
 import router from '@/router'
@@ -22,7 +23,7 @@ const hyRequest = new HYRequest({
       return res
     },
     responseInterceptorCatch: (err) => {
-      if (err?.response?.status === 401) {
+      if (axios.isAxiosError(err) && err.response?.status === 401) {
         clearAuthCache()
         if (router.currentRoute.value.path !== '/login') {
           void router.push('/login')

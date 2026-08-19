@@ -8,6 +8,7 @@ import {
   newPageData,
   newUserData
 } from '@/service/main/system'
+import type { IPageQuery, IUser } from '@/service/main/types'
 import { defineStore } from 'pinia'
 import type { ISystemState } from './type'
 
@@ -19,14 +20,14 @@ const useSystemStore = defineStore('system', {
     pageTotalCount: 0
   }),
   actions: {
-    async getUserListDataAction(queryInfo: any) {
+    async getUserListDataAction(queryInfo: IPageQuery) {
       // 1.请求用户列表数据
       const userListResult = await getUserListData(queryInfo)
       const { list, totalCount } = userListResult.data
       this.usersList = list
       this.usersTotalCount = totalCount
     },
-    async newUserDataAction(userInfo: any) {
+    async newUserDataAction(userInfo: Partial<IUser>) {
       // 1.创建用户数据
       const res = await newUserData(userInfo)
       console.log(res)
@@ -39,14 +40,14 @@ const useSystemStore = defineStore('system', {
       console.log(res)
       this.getUserListDataAction({ offset: 0, size: 10 })
     },
-    async editUserDataAction(id: number, userInfo: any) {
+    async editUserDataAction(id: number, userInfo: Partial<IUser>) {
       const res = await editUserData(id, userInfo)
       console.log(res)
       this.getUserListDataAction({ offset: 0, size: 10 })
     },
 
     // 页面的网络请求
-    async getPageListDataAction(pageName: string, queryInfo: any) {
+    async getPageListDataAction(pageName: string, queryInfo: IPageQuery) {
       // 1.请求用户列表数据
       const pageListResult = await getPageListData(pageName, queryInfo)
       const { list, totalCount } = pageListResult.data
@@ -58,13 +59,13 @@ const useSystemStore = defineStore('system', {
       console.log(res)
       this.getPageListDataAction(pageName, { offset: 0, size: 10 })
     },
-    async newPageDataAction(pageName: string, pageData: any) {
+    async newPageDataAction(pageName: string, pageData: Record<string, unknown>) {
       const res = await newPageData(pageName, pageData)
       console.log(pageData)
       console.log(res)
       this.getPageListDataAction(pageName, { offset: 0, size: 10 })
     },
-    async editPageDataAction(pageName: string, id: number, pageData: any) {
+    async editPageDataAction(pageName: string, id: number, pageData: Record<string, unknown>) {
       const res = await editPageData(pageName, id, pageData)
       console.log(res)
       this.getPageListDataAction(pageName, { offset: 0, size: 10 })
