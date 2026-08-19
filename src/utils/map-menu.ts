@@ -1,18 +1,46 @@
 import type { RouteRecordRaw } from 'vue-router'
+import type { IMenu } from '@/service/main/types'
 
-export let firstRoute: RouteRecordRaw | undefined = undefined
+export interface IMenuRouteMap {
+  routes: RouteRecordRaw[]
+  firstRoute?: RouteRecordRaw
+}
+
+export interface IBreadcrumbItem {
+  name: string
+  path: string
+}
+
+interface IRouteModule {
+  default: RouteRecordRaw
+}
 
 function loadLocalRoutes() {
-  // 1.加载所有的模板
-  const modules: Record<string, any> = import.meta.glob('../router/main/**/*.ts', { eager: true })
+  const modules = import.meta.glob<IRouteModule>('../router/main/**/*.ts', { eager: true })
+  return Object.values(modules).map((module) => module.default)
+}
 
-  // 2.遍历所有的模板为路由对象
-  const routes: RouteRecordRaw[] = []
-  for (const key in modules) {
-    const route = modules[key].default
-    routes.push(route)
+function getChildren(menu: IMenu) {
+  return menu.children ?? []
+}
+
+function findFirstPagePath(menus: IMenu[]): string | undefined {
+  for (const menu of menus) {
+    if (menu.type === 2 && menu.url) return menu.url
+
+    const firstChildPath = findFirstPagePath(getChildren(menu))
+    if (firstChildPath) return firstChildPath
   }
-  return routes
+}
+
+function findMenuPath(menus: IMenu[], path: string, parents: IMenu[] = []): IMenu[] | undefined {
+  for (const menu of menus) {
+    const currentPath = [...parents, menu]
+    if (menu.url === path) return currentPath
+
+    const matchedPath = findMenuPath(getChildren(menu), path, currentPath)
+    if (matchedPath) return matchedPath
+  }
 }
 
 /**
@@ -20,91 +48,79 @@ function loadLocalRoutes() {
  * @param menus 菜单
  * @returns 路由
  */
-export function mapMenuToRoutes(menus: any[]) {
-  // 1.加载所有的路由对象
+export function mapMenuToRoutes(menus: IMenu[]): IMenuRouteMap {
   const localRoutes = loadLocalRoutes()
-
-  // 2.路由匹配
-  // const finalRoutes: RouteRecordRaw[] = []
-  // for (const menu of menus) {
-  //   for (const submenu of menu.children) {
-  //     const menuUrl = submenu.url
-  //     const route = localRoutes.find((item) => item.path === menuUrl)
-  //     if (route) {
-  //       finalRoutes.push(route)
-  //     }
-  //   }
-  // }
-
-  // 3.不确定有几层
+  const localRouteMap = new Map(localRoutes.map((route) => [route.path, route]))
   const finalRoutes: RouteRecordRaw[] = []
-  function _recurseGetRoute(menus: any[]) {
-    for (const menu of menus) {
+  let firstRoute: RouteRecordRaw | undefined
+
+  function collectRoutes(menuList: IMenu[]) {
+    for (const menu of menuList) {
       if (menu.type === 2) {
-        const route = localRoutes.find((item) => item.path === menu.url)
-        if (route) finalRoutes.push(route)
-        if (!firstRoute && route) firstRoute = route
-      } else {
-        if (menu.type === 1 && menu.children.length) {
-          finalRoutes.push({ path: menu.url, redirect: menu.children[0].url })
+        const route = localRouteMap.get(menu.url)
+        if (route) {
+          finalRoutes.push(route)
+          firstRoute ??= route
         }
-        _recurseGetRoute(menu.children ?? [])
+      } else {
+        const children = getChildren(menu)
+        const redirect = menu.type === 1 ? findFirstPagePath(children) : undefined
+        if (redirect) {
+          finalRoutes.push({ path: menu.url, redirect })
+        }
+        collectRoutes(children)
       }
     }
   }
-  _recurseGetRoute(menus)
 
-  return finalRoutes
+  collectRoutes(menus)
+
+  return { routes: finalRoutes, firstRoute }
 }
 
-export function mapPathToBreadcrumbs(menus: any[], path: string) {
-  const breadcrumbs: any[] = []
-  // 1.两层遍历
-  for (const menu of menus) {
-    for (const submenu of menu.children) {
-      if (path === submenu.url) {
-        breadcrumbs.push({ name: menu.name, path: menu.url })
-        breadcrumbs.push({ name: submenu.name, path: submenu.url })
-      }
-    }
-  }
-  return breadcrumbs
+export function mapPathToBreadcrumbs(menus: IMenu[], path: string): IBreadcrumbItem[] {
+  return (findMenuPath(menus, path) ?? []).map((menu) => ({
+    name: menu.name,
+    path: menu.url
+  }))
 }
 
-export function mapPathToMenu(menus: any[], path: string) {
-  for (const menu of menus) {
-    for (const submenu of menu.children) {
-      if (path === submenu.url) return submenu
-    }
-  }
+export function mapPathToMenu(menus: IMenu[], path: string): IMenu | undefined {
+  const matchedPath = findMenuPath(menus, path)
+  return matchedPath?.at(-1)
 }
 
-export function mapMenuToIds(menus: any[]) {
+export function mapMenuToIds(menus: IMenu[]): number[] {
   const ids: number[] = []
-  function _recurseGetId(menusList: any[]) {
+  function collectIds(menusList: IMenu[]) {
     for (const menu of menusList) {
-      if (menu.children) {
-        _recurseGetId(menu.children)
+      const children = getChildren(menu)
+      if (children.length) {
+        collectIds(children)
       } else {
         ids.push(menu.id)
       }
     }
   }
-  _recurseGetId(menus)
+  collectIds(menus)
   return ids
 }
 
-export function mapMenuToPersssions(menus: any[]) {
+export function mapMenuToPermissions(menus: IMenu[]): string[] {
   const permissions: string[] = []
-  function _recurseGetPermission(menuList: any[]) {
+  function collectPermissions(menuList: IMenu[]) {
     for (const menu of menuList) {
-      if (menu.type === 1 || menu.type === 2) {
-        _recurseGetPermission(menu.children ?? [])
-      } else {
+      const children = getChildren(menu)
+      if (children.length) {
+        collectPermissions(children)
+      } else if (menu.permission) {
         permissions.push(menu.permission)
       }
     }
   }
-  _recurseGetPermission(menus)
+  collectPermissions(menus)
   return permissions
 }
+
+/** @deprecated Use mapMenuToPermissions instead. */
+export const mapMenuToPersssions = mapMenuToPermissions

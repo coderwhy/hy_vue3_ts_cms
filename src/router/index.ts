@@ -1,7 +1,8 @@
 import { localCache } from '@/utils/cache'
 import type { IMenu } from '@/service/login/types'
-import { firstRoute, mapMenuToRoutes } from '@/utils/map-menu'
+import { mapMenuToRoutes } from '@/utils/map-menu'
 import { createRouter, createWebHashHistory } from 'vue-router'
+import type { RouteRecordRaw } from 'vue-router'
 
 const router = createRouter({
   history: createWebHashHistory(),
@@ -27,13 +28,31 @@ const router = createRouter({
   ]
 })
 
-export function addRoutesWithMenu(menus: IMenu[]) {
-  // 1.获取匹配到的所有的路由
-  const routes = mapMenuToRoutes(menus)
+let firstRoute: RouteRecordRaw | undefined
+const dynamicRouteNames = new Set<string>()
 
-  // 2.动态添加到router中
-  for (const route of routes) {
-    router.addRoute('main', route)
+function getDynamicRouteName(route: RouteRecordRaw) {
+  return `dynamic-${String(route.name ?? route.path)}`
+}
+
+export function resetDynamicRoutes() {
+  for (const routeName of dynamicRouteNames) {
+    if (router.hasRoute(routeName)) router.removeRoute(routeName)
+  }
+
+  dynamicRouteNames.clear()
+  firstRoute = undefined
+}
+
+export function addRoutesWithMenu(menus: IMenu[]) {
+  resetDynamicRoutes()
+  const routeMap = mapMenuToRoutes(menus)
+  firstRoute = routeMap.firstRoute
+
+  for (const route of routeMap.routes) {
+    const routeWithName = { ...route, name: getDynamicRouteName(route) }
+    router.addRoute('main', routeWithName)
+    dynamicRouteNames.add(routeWithName.name)
   }
 }
 
