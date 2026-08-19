@@ -1,9 +1,9 @@
-import router, { addRoutesWithMenu } from '@/router'
+import router, { addRoutesWithMenu, resetDynamicRoutes } from '@/router'
 import { accountLogin, getRoleMenus, getUserById } from '@/service/login/login'
 import type { IAccountLoginParams, IMenu, IUserInfo } from '@/service/login/types'
 import { clearAuthCache } from '@/utils/auth'
 import { localCache } from '@/utils/cache'
-import { mapMenuToPersssions } from '@/utils/map-menu'
+import { mapMenuToPermissions } from '@/utils/map-menu'
 import { defineStore } from 'pinia'
 import useMainStore from '../main/main'
 
@@ -43,7 +43,7 @@ const useLoginStore = defineStore('login', {
       localCache.setCache('userMenus', this.userMenus)
 
       // 5.保存权限信息
-      const permissions = mapMenuToPersssions(this.userMenus)
+      const permissions = mapMenuToPermissions(this.userMenus)
       this.permissions = permissions
       localCache.setCache('permissions', this.permissions)
 
@@ -75,6 +75,7 @@ const useLoginStore = defineStore('login', {
       this.$reset()
       useMainStore().$reset()
       clearAuthCache()
+      resetDynamicRoutes()
       router.push('/login')
     }
   }

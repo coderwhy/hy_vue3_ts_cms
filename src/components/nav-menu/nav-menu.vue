@@ -34,6 +34,7 @@ import { ref } from 'vue'
 import useLoginStore from '@/store/login/login'
 import { useRoute, useRouter } from 'vue-router'
 import { mapPathToMenu } from '@/utils/map-menu'
+import type { IMenu } from '@/service/main/types'
 
 // 0.定义数据
 defineProps({
@@ -50,11 +51,11 @@ const userMenus = loginStore.userMenus
 // 2.默认值的问题
 const route = useRoute()
 const currentMenu = mapPathToMenu(userMenus, route.path)
-const defaultValue = ref<string>(currentMenu.id + '')
+const defaultValue = ref(currentMenu ? String(currentMenu.id) : '')
 
 // 2.监听item点击
 const router = useRouter()
-function handleItemClick(item: any) {
+function handleItemClick(item: IMenu) {
   router.push(item.url)
 }
 </script>
