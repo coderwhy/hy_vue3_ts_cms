@@ -1,4 +1,6 @@
-const modalConfig = {
+import type { IPageModalConfig } from '@/types/page'
+
+const modalConfig: IPageModalConfig = {
   pageName: 'department',
   title: '新建部门',
   formItems: [

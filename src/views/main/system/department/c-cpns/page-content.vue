@@ -63,14 +63,18 @@ import { storeToRefs } from 'pinia'
 import useSystemStore from '@/store/main/system/system'
 import { utcFormat } from '@/utils/format'
 import { ref } from 'vue'
+import type { PageFormData, PageRecord } from '@/types/page'
 
-const emit = defineEmits(['newDataClick', 'editDataClick'])
+const emit = defineEmits<{
+  (event: 'newDataClick'): void
+  (event: 'editDataClick', data: PageRecord): void
+}>()
 
 // 1.请求数据
 const systemStore = useSystemStore()
 const currentPage = ref(1)
 const pageSize = ref(10)
-function fetchPageListData(queryInfo: any = {}) {
+function fetchPageListData(queryInfo: PageFormData = {}) {
   // 1.获取offset和size
   const size = pageSize.value
   const offset = (currentPage.value - 1) * size
@@ -103,7 +107,7 @@ function handleDeleteClick(id: number) {
   systemStore.deletePageDataAction('department', id)
 }
 
-function handleEditClick(data: any) {
+function handleEditClick(data: PageRecord) {
   emit('editDataClick', data)
 }
 

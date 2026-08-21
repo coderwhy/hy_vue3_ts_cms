@@ -1,4 +1,6 @@
-const searchConfig = {
+import type { IPageSearchConfig } from '@/types/page'
+
+const searchConfig: IPageSearchConfig = {
   pageName: 'role',
   formItems: [
     {

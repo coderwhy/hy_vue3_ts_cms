@@ -44,6 +44,8 @@ import { storeToRefs } from 'pinia'
 import { ref, nextTick } from 'vue'
 import { mapMenuToIds } from '@/utils/map-menu'
 import type { ElTree } from 'element-plus'
+import type { IMenu } from '@/service/main/types'
+import type { PageRecord } from '@/types/page'
 
 const { contentRef, handleQueryClick, handleResetClick } = usePageContent()
 const { modalRef, handleNewDataClick, handleEditDataClick } = usePageModal(editCallback)
@@ -51,17 +53,28 @@ const { modalRef, handleNewDataClick, handleEditDataClick } = usePageModal(editC
 // 菜单的展示
 const mainStore = useMainStore()
 const { entireMenus } = storeToRefs(mainStore)
-const otherInfo = ref({})
-function handleMenuCheckChange(data1: any, data2: any) {
-  const menuList = [...data2.checkedKeys, ...data2.halfCheckedKeys]
+const otherInfo = ref<PageRecord>({})
+interface ITreeCheckState {
+  checkedKeys: Array<number | string>
+  halfCheckedKeys: Array<number | string>
+}
+function handleMenuCheckChange(_data: IMenu, data: ITreeCheckState) {
+  const menuList = [...data.checkedKeys, ...data.halfCheckedKeys]
   otherInfo.value = { menuList }
 }
 const treeRef = ref<InstanceType<typeof ElTree>>()
-function editCallback(data: any) {
+function editCallback(data: PageRecord) {
   nextTick(() => {
-    const menuList = mapMenuToIds(data.menuList)
+    const menus = Array.isArray(data.menuList) ? data.menuList.filter(isMenu) : []
+    const menuList = mapMenuToIds(menus)
     treeRef.value?.setCheckedKeys(menuList)
   })
+}
+
+function isMenu(value: unknown): value is IMenu {
+  if (typeof value !== 'object' || value === null) return false
+  const menu = value as Record<string, unknown>
+  return typeof menu.id === 'number' && typeof menu.name === 'string'
 }
 </script>
 

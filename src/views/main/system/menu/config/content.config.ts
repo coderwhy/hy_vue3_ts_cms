@@ -1,4 +1,6 @@
-const contentConfig = {
+import type { IPageContentConfig } from '@/types/page'
+
+const contentConfig: IPageContentConfig = {
   pageName: 'menu',
   propsList: [
     { prop: 'name', label: '菜单名称', width: '180px' },

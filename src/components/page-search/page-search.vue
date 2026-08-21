@@ -43,22 +43,23 @@
 <script setup lang="ts" name="page-search">
 import type { ElForm } from 'element-plus'
 import { reactive, ref } from 'vue'
+import type { IPageSearchConfig, PageFormData } from '@/types/page'
 
 interface IProps {
-  searchConfig: {
-    pageName: string
-    formItems: any[]
-  }
+  searchConfig: IPageSearchConfig
 }
 const props = defineProps<IProps>()
-const emit = defineEmits(['queryClick', 'resetClick'])
+const emit = defineEmits<{
+  (event: 'queryClick', searchInfo: PageFormData): void
+  (event: 'resetClick'): void
+}>()
 
 // 1.创建表单的数据
-const initialForm: any = {}
+const initialForm: PageFormData = {}
 for (const item of props.searchConfig.formItems) {
-  initialForm[item['prop']] = item['initialValue'] ?? ''
+  initialForm[item.prop] = item.initialValue ?? ''
 }
-const searchForm = reactive(initialForm)
+const searchForm = reactive<PageFormData>(initialForm)
 
 // 2.监听按钮的点击
 const formRef = ref<InstanceType<typeof ElForm>>()

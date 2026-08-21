@@ -67,7 +67,6 @@ const userSearchForm = reactive({
 // 2.监听按钮的点击
 const formRef = ref<InstanceType<typeof ElForm>>()
 function handleResetClick() {
-  console.log(formRef.value)
   formRef.value?.resetFields()
   emit('resetClick')
 }
