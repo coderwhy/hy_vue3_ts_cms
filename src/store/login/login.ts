@@ -49,7 +49,7 @@ const useLoginStore = defineStore('login', {
 
       // 5.获取所有的数据
       const mainStore = useMainStore()
-      mainStore.fetchEntireDataAction()
+      await mainStore.fetchEntireDataAction()
 
       // 5.动态添加路由
       addRoutesWithMenu(this.userMenus)
@@ -58,7 +58,7 @@ const useLoginStore = defineStore('login', {
       router.push('/main')
     },
 
-    loadLocalDataAction() {
+    async loadLocalDataAction() {
       this.token = localCache.getCache<string>('token') ?? ''
       this.userInfo = localCache.getCache<IUserInfo>('userInfo') ?? null
       this.userMenus = localCache.getCache<IMenu[]>('userMenus') ?? []
@@ -67,7 +67,7 @@ const useLoginStore = defineStore('login', {
       if (this.token && this.userMenus.length) {
         addRoutesWithMenu(this.userMenus) // 获取所有的数据
         const mainStore = useMainStore()
-        mainStore.fetchEntireDataAction()
+        await mainStore.fetchEntireDataAction()
       }
     },
 

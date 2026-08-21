@@ -1,6 +1,7 @@
 import { createApp } from 'vue'
 import router from './router'
 import store from './store'
+import useLoginStore from './store/login/login'
 import 'normalize.css'
 
 import './assets/css/index.less'
@@ -15,4 +16,18 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
 
 app.use(store)
 app.use(router)
-app.mount('#app')
+
+const loginStore = useLoginStore()
+
+async function bootstrapApp() {
+  try {
+    await loginStore.loadLocalDataAction()
+  } catch {
+    loginStore.logoutAction()
+  }
+
+  await router.isReady()
+  app.mount('#app')
+}
+
+void bootstrapApp()
