@@ -16,9 +16,11 @@ const useMainStore = defineStore('main', {
   }),
   actions: {
     async fetchEntireDataAction() {
-      const departmentResult = await getDepartmentData({ offset: 0, size: 100 })
-      const roleResult = await getRoleData({ offset: 0, size: 100 })
-      const menuResult = await getMenuData()
+      const [departmentResult, roleResult, menuResult] = await Promise.all([
+        getDepartmentData({ offset: 0, size: 100 }),
+        getRoleData({ offset: 0, size: 100 }),
+        getMenuData()
+      ])
 
       this.entireDepartments = departmentResult.data.list
       this.entireRoles = roleResult.data.list
