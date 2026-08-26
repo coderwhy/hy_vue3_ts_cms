@@ -1,5 +1,5 @@
 import hyRequest from '..'
-import type { IApiResponse, IPaginatedData } from '../types'
+import type { IApiResponse, IPaginatedData, IRequestOptions } from '../types'
 import type {
   IDepartment,
   IMenu,
@@ -11,10 +11,11 @@ import type {
 } from './types'
 
 /** 用户的网络请求 */
-export function getUserListData(queryInfo: IPageQuery) {
+export function getUserListData(queryInfo: IPageQuery, options: IRequestOptions = {}) {
   return hyRequest.post<IApiResponse<IPaginatedData<IUser>>, IPageQuery>({
     url: '/users/list',
-    data: queryInfo
+    data: queryInfo,
+    ...options
   })
 }
 
@@ -39,10 +40,15 @@ export function editUserData(id: number, userInfo: IUserPayload) {
 }
 
 /** 获取页面的数据 */
-export function getPageListData(pageName: string, queryInfo: IPageQueryParams) {
+export function getPageListData(
+  pageName: string,
+  queryInfo: IPageQueryParams,
+  options: IRequestOptions = {}
+) {
   return hyRequest.post<IApiResponse<IPaginatedData<Record<string, unknown>>>, IPageQueryParams>({
     url: `/${pageName}/list`,
-    data: queryInfo
+    data: queryInfo,
+    ...options
   })
 }
 
