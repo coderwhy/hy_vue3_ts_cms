@@ -4,7 +4,15 @@
       <h3 class="title">用户列表</h3>
       <el-button type="primary" @click="handleNewData">新建用户</el-button>
     </div>
-    <div class="table">
+    <el-alert
+      v-if="usersError"
+      class="error"
+      :title="usersError"
+      type="error"
+      show-icon
+      :closable="false"
+    />
+    <div v-loading="usersLoading" element-loading-text="加载中..." class="table">
       <el-table :data="usersList" :border="true" style="width: 100%">
         <el-table-column align="center" type="selection" label="选择" />
         <el-table-column align="center" type="index" label="序号" width="80" />
@@ -59,6 +67,7 @@
         :page-sizes="[10, 20, 30]"
         layout="total, sizes, prev, pager, next, jumper"
         :total="usersTotalCount"
+        :disabled="usersLoading"
         @current-change="handleCurrentChange"
       />
     </div>
@@ -92,7 +101,7 @@ function fetchUserListData(queryInfo: PageFormData = {}) {
 fetchUserListData()
 
 // 2.展示数据
-const { usersList, usersTotalCount } = storeToRefs(systemStore)
+const { usersList, usersTotalCount, usersLoading, usersError } = storeToRefs(systemStore)
 
 // 3.绑定分页数据
 function handleCurrentChange() {
@@ -149,9 +158,15 @@ defineExpose({
   }
 
   .table {
+    min-height: 160px;
+
     :deep(.el-table__cell) {
       padding: 14px 0;
     }
+  }
+
+  .error {
+    margin-bottom: 16px;
   }
 
   .footer {

@@ -6,7 +6,15 @@
         {{ contentConfig.header?.btnTitle }}
       </el-button>
     </div>
-    <div class="table">
+    <el-alert
+      v-if="pageError"
+      class="error"
+      :title="pageError"
+      type="error"
+      show-icon
+      :closable="false"
+    />
+    <div v-loading="pageLoading" element-loading-text="加载中..." class="table">
       <el-table
         :data="pageList"
         :border="true"
@@ -60,6 +68,7 @@
         :page-sizes="[10, 20, 30]"
         layout="total, sizes, prev, pager, next, jumper"
         :total="pageTotalCount"
+        :disabled="pageLoading"
         @current-change="handleCurrentChange"
       />
     </div>
@@ -105,7 +114,7 @@ function fetchPageListData(queryInfo: PageFormData = {}) {
 fetchPageListData()
 
 // 2.展示数据
-const { pageList, pageTotalCount } = storeToRefs(systemStore)
+const { pageList, pageTotalCount, pageLoading, pageError } = storeToRefs(systemStore)
 
 // 3.绑定分页数据
 function handleCurrentChange() {
@@ -167,9 +176,15 @@ defineExpose({
   }
 
   .table {
+    min-height: 160px;
+
     :deep(.el-table__cell) {
       padding: 14px 0;
     }
+  }
+
+  .error {
+    margin-bottom: 16px;
   }
 
   .footer {

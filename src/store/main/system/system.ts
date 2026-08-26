@@ -1,3 +1,4 @@
+import axios from 'axios'
 import {
   deletePageData,
   deleteUserData,
@@ -13,20 +14,58 @@ import { defineStore } from 'pinia'
 import type { PageRecord } from '@/types/page'
 import type { ISystemState } from './type'
 
+const requestControllers = {
+  users: null as AbortController | null,
+  page: null as AbortController | null
+}
+
+let usersRequestId = 0
+let pageRequestId = 0
+
+function getRequestErrorMessage(error: unknown) {
+  if (axios.isAxiosError(error)) {
+    const responseMessage = (error.response?.data as { message?: unknown } | undefined)?.message
+    return typeof responseMessage === 'string' ? responseMessage : error.message
+  }
+  return error instanceof Error ? error.message : '请求失败，请稍后重试'
+}
+
 const useSystemStore = defineStore('system', {
   state: (): ISystemState => ({
     usersTotalCount: 0,
     usersList: [],
+    usersLoading: false,
+    usersError: null,
     pageList: [],
-    pageTotalCount: 0
+    pageTotalCount: 0,
+    pageLoading: false,
+    pageError: null
   }),
   actions: {
     async getUserListDataAction(queryInfo: IPageQuery) {
-      // 1.请求用户列表数据
-      const userListResult = await getUserListData(queryInfo)
-      const { list, totalCount } = userListResult.data
-      this.usersList = list
-      this.usersTotalCount = totalCount
+      const requestId = ++usersRequestId
+      requestControllers.users?.abort()
+      const controller = new AbortController()
+      requestControllers.users = controller
+      this.usersLoading = true
+      this.usersError = null
+
+      try {
+        const userListResult = await getUserListData(queryInfo, { signal: controller.signal })
+        if (requestId !== usersRequestId) return
+
+        const { list, totalCount } = userListResult.data
+        this.usersList = list
+        this.usersTotalCount = totalCount
+      } catch (error: unknown) {
+        if (requestId !== usersRequestId || axios.isCancel(error)) return
+        this.usersError = getRequestErrorMessage(error)
+      } finally {
+        if (requestId === usersRequestId) {
+          this.usersLoading = false
+          requestControllers.users = null
+        }
+      }
     },
     async newUserDataAction(userInfo: IUserPayload) {
       // 1.创建用户数据
@@ -46,11 +85,31 @@ const useSystemStore = defineStore('system', {
 
     // 页面的网络请求
     async getPageListDataAction(pageName: string, queryInfo: IPageQueryParams) {
-      // 1.请求用户列表数据
-      const pageListResult = await getPageListData(pageName, queryInfo)
-      const { list, totalCount } = pageListResult.data
-      this.pageList = list
-      this.pageTotalCount = totalCount
+      const requestId = ++pageRequestId
+      requestControllers.page?.abort()
+      const controller = new AbortController()
+      requestControllers.page = controller
+      this.pageLoading = true
+      this.pageError = null
+
+      try {
+        const pageListResult = await getPageListData(pageName, queryInfo, {
+          signal: controller.signal
+        })
+        if (requestId !== pageRequestId) return
+
+        const { list, totalCount } = pageListResult.data
+        this.pageList = list
+        this.pageTotalCount = totalCount
+      } catch (error: unknown) {
+        if (requestId !== pageRequestId || axios.isCancel(error)) return
+        this.pageError = getRequestErrorMessage(error)
+      } finally {
+        if (requestId === pageRequestId) {
+          this.pageLoading = false
+          requestControllers.page = null
+        }
+      }
     },
     async deletePageDataAction(pageName: string, id: number) {
       await deletePageData(pageName, id)
