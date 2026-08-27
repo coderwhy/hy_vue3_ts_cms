@@ -36,10 +36,12 @@ const useSystemStore = defineStore('system', {
     usersList: [],
     usersLoading: false,
     usersError: null,
+    usersMutationLoading: false,
     pageList: [],
     pageTotalCount: 0,
     pageLoading: false,
-    pageError: null
+    pageError: null,
+    pageMutationLoading: false
   }),
   actions: {
     async getUserListDataAction(queryInfo: IPageQuery) {
@@ -68,19 +70,34 @@ const useSystemStore = defineStore('system', {
       }
     },
     async newUserDataAction(userInfo: IUserPayload) {
-      // 1.创建用户数据
-      await newUserData(userInfo)
+      this.usersMutationLoading = true
+      try {
+        // 1.创建用户数据
+        await newUserData(userInfo)
 
-      // 2.请求新的数据
-      await this.getUserListDataAction({ offset: 0, size: 10 })
+        // 2.请求新的数据
+        await this.getUserListDataAction({ offset: 0, size: 10 })
+      } finally {
+        this.usersMutationLoading = false
+      }
     },
     async deleteUserDataAction(id: number) {
-      await deleteUserData(id)
-      await this.getUserListDataAction({ offset: 0, size: 10 })
+      this.usersMutationLoading = true
+      try {
+        await deleteUserData(id)
+        await this.getUserListDataAction({ offset: 0, size: 10 })
+      } finally {
+        this.usersMutationLoading = false
+      }
     },
     async editUserDataAction(id: number, userInfo: IUserPayload) {
-      await editUserData(id, userInfo)
-      await this.getUserListDataAction({ offset: 0, size: 10 })
+      this.usersMutationLoading = true
+      try {
+        await editUserData(id, userInfo)
+        await this.getUserListDataAction({ offset: 0, size: 10 })
+      } finally {
+        this.usersMutationLoading = false
+      }
     },
 
     // 页面的网络请求
@@ -112,16 +129,31 @@ const useSystemStore = defineStore('system', {
       }
     },
     async deletePageDataAction(pageName: string, id: number) {
-      await deletePageData(pageName, id)
-      await this.getPageListDataAction(pageName, { offset: 0, size: 10 })
+      this.pageMutationLoading = true
+      try {
+        await deletePageData(pageName, id)
+        await this.getPageListDataAction(pageName, { offset: 0, size: 10 })
+      } finally {
+        this.pageMutationLoading = false
+      }
     },
     async newPageDataAction(pageName: string, pageData: PageRecord) {
-      await newPageData(pageName, pageData)
-      await this.getPageListDataAction(pageName, { offset: 0, size: 10 })
+      this.pageMutationLoading = true
+      try {
+        await newPageData(pageName, pageData)
+        await this.getPageListDataAction(pageName, { offset: 0, size: 10 })
+      } finally {
+        this.pageMutationLoading = false
+      }
     },
     async editPageDataAction(pageName: string, id: number, pageData: PageRecord) {
-      await editPageData(pageName, id, pageData)
-      await this.getPageListDataAction(pageName, { offset: 0, size: 10 })
+      this.pageMutationLoading = true
+      try {
+        await editPageData(pageName, id, pageData)
+        await this.getPageListDataAction(pageName, { offset: 0, size: 10 })
+      } finally {
+        this.pageMutationLoading = false
+      }
     }
   }
 })

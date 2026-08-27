@@ -44,8 +44,12 @@
       </div>
       <template #footer>
         <span class="dialog-footer">
-          <el-button @click="dialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="handleConfirmClick">确定</el-button>
+          <el-button :disabled="pageMutationLoading" @click="dialogVisible = false">
+            取消
+          </el-button>
+          <el-button type="primary" :loading="pageMutationLoading" @click="handleConfirmClick">
+            确定
+          </el-button>
         </span>
       </template>
     </el-dialog>
@@ -53,6 +57,8 @@
 </template>
 
 <script setup lang="ts" name="modal">
+import { ElMessage } from 'element-plus'
+import { storeToRefs } from 'pinia'
 import useSystemStore from '@/store/main/system/system'
 import { reactive, ref } from 'vue'
 import type { IPageModalConfig, PageFormData, PageFormValue, PageRecord } from '@/types/page'
@@ -82,16 +88,29 @@ const formData = reactive<PageFormData>(initialForm)
 
 // 点击确定
 const systemStore = useSystemStore()
-function handleConfirmClick() {
-  dialogVisible.value = false
+const { pageMutationLoading } = storeToRefs(systemStore)
+async function handleConfirmClick() {
+  if (pageMutationLoading.value) return
+
+  const editing = isEdit.value
   const data: PageRecord = { ...formData }
   if (props.otherInfo) {
     Object.assign(data, props.otherInfo)
   }
-  if (!isEdit.value) {
-    systemStore.newPageDataAction(props.modalConfig.pageName, data)
-  } else if (editData.value && typeof editData.value.id === 'number') {
-    systemStore.editPageDataAction(props.modalConfig.pageName, editData.value.id, data)
+
+  try {
+    if (!editing) {
+      await systemStore.newPageDataAction(props.modalConfig.pageName, data)
+    } else if (editData.value && typeof editData.value.id === 'number') {
+      await systemStore.editPageDataAction(props.modalConfig.pageName, editData.value.id, data)
+    } else {
+      return
+    }
+
+    dialogVisible.value = false
+    ElMessage.success(editing ? '编辑成功' : '创建成功')
+  } catch {
+    ElMessage.error(editing ? '编辑失败，请稍后重试' : '创建失败，请稍后重试')
   }
 }
 

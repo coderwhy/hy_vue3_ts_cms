@@ -43,6 +43,7 @@
               size="small"
               icon="EditPen"
               link
+              :disabled="usersMutationLoading"
               @click="handleEditClick(scope.row)"
             >
               编辑
@@ -52,6 +53,7 @@
               size="small"
               icon="Delete"
               link
+              :disabled="usersMutationLoading"
               @click="handleDeleteClick(scope.row.id)"
             >
               删除
@@ -75,6 +77,7 @@
 </template>
 
 <script setup lang="ts" name="content">
+import { ElMessage } from 'element-plus'
 import { storeToRefs } from 'pinia'
 import useSystemStore from '@/store/main/system/system'
 import { utcFormat } from '@/utils/format'
@@ -101,7 +104,8 @@ function fetchUserListData(queryInfo: PageFormData = {}) {
 fetchUserListData()
 
 // 2.展示数据
-const { usersList, usersTotalCount, usersLoading, usersError } = storeToRefs(systemStore)
+const { usersList, usersTotalCount, usersLoading, usersError, usersMutationLoading } =
+  storeToRefs(systemStore)
 
 // 3.绑定分页数据
 function handleCurrentChange() {
@@ -119,8 +123,13 @@ function handleNewData() {
 }
 
 // 5.删除和编辑操作
-function handleDeleteClick(id: number) {
-  systemStore.deleteUserDataAction(id)
+async function handleDeleteClick(id: number) {
+  try {
+    await systemStore.deleteUserDataAction(id)
+    ElMessage.success('删除成功')
+  } catch {
+    ElMessage.error('删除失败，请稍后重试')
+  }
 }
 
 function handleEditClick(data: PageRecord) {
