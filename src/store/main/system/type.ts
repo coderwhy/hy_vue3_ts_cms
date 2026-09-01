@@ -8,9 +8,11 @@ export interface ISystemState {
   usersList: IUser[]
   usersLoading: boolean
   usersError: string | null
+  usersMutationLoading: boolean
 
   pageList: PageRecord[]
   pageTotalCount: number
   pageLoading: boolean
   pageError: string | null
+  pageMutationLoading: boolean
 }

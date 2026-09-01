@@ -20,8 +20,12 @@
       </div>
       <template #footer>
         <span class="dialog-footer">
-          <el-button @click="dialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="handleConfirmClick">确定</el-button>
+          <el-button :disabled="pageMutationLoading" @click="dialogVisible = false">
+            取消
+          </el-button>
+          <el-button type="primary" :loading="pageMutationLoading" @click="handleConfirmClick">
+            确定
+          </el-button>
         </span>
       </template>
     </el-dialog>
@@ -29,6 +33,7 @@
 </template>
 
 <script setup lang="ts" name="modal">
+import { ElMessage } from 'element-plus'
 import useMainStore from '@/store/main/main'
 import useSystemStore from '@/store/main/system/system'
 import { storeToRefs } from 'pinia'
@@ -58,17 +63,29 @@ const formData = reactive<IDepartmentFormData>({
 
 // 点击确定
 const systemStore = useSystemStore()
-function handleConfirmClick() {
-  dialogVisible.value = false
+const { pageMutationLoading } = storeToRefs(systemStore)
+async function handleConfirmClick() {
+  if (pageMutationLoading.value) return
+
+  const editing = isEdit.value
   const departmentData: PageRecord = {
     name: formData.name,
     leader: formData.leader,
     parentId: formData.parentId === '' ? null : Number(formData.parentId)
   }
-  if (!isEdit.value) {
-    systemStore.newPageDataAction('department', departmentData)
-  } else if (editData.value && typeof editData.value.id === 'number') {
-    systemStore.editPageDataAction('department', editData.value.id, departmentData)
+  try {
+    if (!editing) {
+      await systemStore.newPageDataAction('department', departmentData)
+    } else if (editData.value && typeof editData.value.id === 'number') {
+      await systemStore.editPageDataAction('department', editData.value.id, departmentData)
+    } else {
+      return
+    }
+
+    dialogVisible.value = false
+    ElMessage.success(editing ? '编辑成功' : '创建成功')
+  } catch {
+    ElMessage.error(editing ? '编辑失败，请稍后重试' : '创建失败，请稍后重试')
   }
 }
 
